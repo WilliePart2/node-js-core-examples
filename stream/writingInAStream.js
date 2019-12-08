@@ -36,13 +36,14 @@ const write = (destination, data, encoding, callback) => {
     process.nextTick(callback);
     // setImmediate(callback); // also could be as a solution
   } else {
-    destination.on('drain', callback);
+    destination.once('drain', callback);
   }
 };
 
 const writeTimesAsync = (destination, data, encoding, times, done) => {
   const localCallback = _ => {
     if (times-- === 0) {
+      destination.end();
       done && done();
     } else {
       write(destination, data, encoding, localCallback);
@@ -59,9 +60,9 @@ const writeTimesAsync = (destination, data, encoding, times, done) => {
 //   1000
 // );
 
-// writeTimesAsync(
-//   fs.createWriteStream(path.resolve(__dirname, './files/writeDataAsync.txt')),
-//   'hello',
-//   'utf8',
-//   1000
-// );
+writeTimesAsync(
+  fs.createWriteStream(path.resolve(__dirname, './files/writeDataAsync.txt')),
+  'hello',
+  'utf8',
+  1000
+);
