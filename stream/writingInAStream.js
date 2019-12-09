@@ -1,5 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+const { once } = require('events');
+const stream = require('stream');
+const { promisify } = require('util');
+const finished = promisify(stream.finished);
 
 /**
  * Implementation one
@@ -53,16 +57,42 @@ const writeTimesAsync = (destination, data, encoding, times, done) => {
   write(destination, data, encoding, localCallback);
 };
 
-// writeTimes(
-//   fs.createWriteStream(path.resolve(__dirname, './files/writeData.txt')),
-//   'hello',
-//   'utf8',
-//   1000
-// );
+/**
+ * Implementation three
+ * Writing into stream via async iterator is pleasant enough =3
+ */
+
+const writeTimesAsyncIterator = async (destination, data, encoding, times) => {
+  for await (const _ of new Array(times)) {
+    if (!destination.write(data, encoding)) {
+      await once(destination, 'drain');
+    }
+  }
+
+  await finished(destination);
+
+  console.log('Writing is finished');
+};
+
+writeTimes(
+  fs.createWriteStream(path.resolve(__dirname, './files/writeData.txt')),
+  'hello',
+  'utf8',
+  1000
+);
 
 writeTimesAsync(
   fs.createWriteStream(path.resolve(__dirname, './files/writeDataAsync.txt')),
   'hello',
   'utf8',
   1000
+);
+
+writeTimesAsyncIterator(
+  fs.createWriteStream(
+    path.resolve(__dirname, './files/writeDataAsyncIterator.txt'),
+  ),
+  'hello',
+  'utf8',
+  1000,
 );
