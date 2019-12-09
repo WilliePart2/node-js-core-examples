@@ -68,6 +68,7 @@ const writeTimesAsyncIterator = async (destination, data, encoding, times) => {
       await once(destination, 'drain');
     }
   }
+  destination.end();
 
   await finished(destination);
 
